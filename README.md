@@ -1,8 +1,9 @@
+# hapi-auto-handler [![Build Status](https://travis-ci.org/firstandthird/hapi-auto-handler.svg?branch=master)](https://travis-ci.org/firstandthird/hapi-auto-handler)
 
 ## Hapi plugin that makes it easy to write route handlers that perform complex asynchronous processing flows.
 
 ## Background
-The [async](http://caolan.github.io/async/index.html) library is a popular module for working with asynchronous JavaScript. One of the most powerful methods it provides is __[async.auto](http://caolan.github.io/async/docs.html#auto)__, which lets you describe and execute complex parallel dependency graphs with one easy-to-read JavaScript object. This plugin makes it simple to incorporate __async.auto__ into your hapi route handlers and return the results to the caller.
+The __[async](http://caolan.github.io/async/index.html)__ library is a popular module for working with asynchronous JavaScript. One of the most powerful methods it provides is __[async.auto](http://caolan.github.io/async/docs.html#auto)__, which lets you describe and execute complex parallel dependency graphs with one easy-to-read JavaScript object. This plugin makes it simple to incorporate __async.auto__ into your hapi route handlers and return the results to the caller.
 
 
 ## Install
@@ -56,7 +57,8 @@ server.register({
 ```
 ## Features:
 
-- ***request***: can be specified in the dependency list for a method to make the hapi [request](http://hapijs.com/api#requests) object available inside the method:
+### Special Dependencies
+- ***request***: can be specified in the dependency list for a method to make the hapi __[request](http://hapijs.com/api#requests)__ object available inside the method:
 ```js
 ...
   getRequestStuff: ['request', (results, done) => {
@@ -66,7 +68,7 @@ server.register({
   }]
   ...
 ```
-- ***server***: can be specified in the dependency list for a method to make the hapi [server](http://hapijs.com/api#server) object available inside the method:
+- ***server***: can be specified in the dependency list for a method to make the hapi __[server](http://hapijs.com/api#server)__ object available inside the method:
 ```js
 ...
   getServerStuff: ['server', (results, done) => {
@@ -77,7 +79,8 @@ server.register({
   ...
 ```
 
-- ***reply***: if a method in the auto map is given the keyname 'reply', then the result will be forwarded to the route handler's [reply](http://hapijs.com/api#replyerr-result) method.
+### Special Methods
+- ***reply***: if a method in the auto map is given the keyname 'reply', then the result will be forwarded to the route handler's __[reply](http://hapijs.com/api#replyerr-result)__ method.
 ```js
 ...
   reply: (done) => {
