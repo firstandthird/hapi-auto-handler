@@ -4,6 +4,7 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const Hapi = require('hapi');
 const autoPlugin = require('../');
+const Boom = require('boom');
 
 lab.experiment('hapi-auto-handler', () => {
   let server;
@@ -125,6 +126,60 @@ lab.experiment('hapi-auto-handler', () => {
           code.expect(response.result.first.host).to.equal(server.info.host);
           code.expect(typeof response.result.second).to.equal('object');
           code.expect(response.result.second.host).to.equal(server.info.host);
+          allDone();
+        });
+      });
+    });
+  });
+  lab.test(' returns errors', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              done(new Error('error'));
+            },
+            second: ['first', (results, done) => {
+              done(null, 'fail');
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (response) => {
+          code.expect(response.statusCode).to.equal(500);
+          allDone();
+        });
+      });
+    });
+  });
+  lab.test(' returns Boom errors', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              done(Boom.notFound());
+            },
+            second: ['first', (results, done) => {
+              done(null, 'fail');
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (response) => {
+          code.expect(response.statusCode).to.equal(404);
           allDone();
         });
       });

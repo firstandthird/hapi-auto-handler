@@ -2,6 +2,7 @@
 const async = require('async');
 const defaultMethod = require('lodash.defaults');
 const unset = require('lodash.unset');
+const Boom = require('boom');
 const defaults = {};
 
 exports.register = (server, options, next) => {
@@ -20,8 +21,11 @@ exports.register = (server, options, next) => {
       // run the async.auto expression:
       async.auto(autoOptions, (err, results) => {
         if (err) {
-          server.log(['error', 'hapi-auto-handler'], err);
-          return reply(err.toString()).code(500);
+          if (err.isBoom) {
+            return reply(err);
+          }
+
+          return reply(Boom.wrap(err));
         }
         if (autoOptions.reply) {
           return reply(results.reply);
