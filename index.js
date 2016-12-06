@@ -18,6 +18,9 @@ exports.register = (server, options, next) => {
       autoOptions.request = (done) => {
         done(null, request);
       };
+      autoOptions.settings = (done) => {
+        done(null, request.server.settings.app);
+      };
       // run the async.auto expression:
       async.auto(autoOptions, (err, results) => {
         if (err) {
