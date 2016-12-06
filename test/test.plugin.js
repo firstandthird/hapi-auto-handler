@@ -12,6 +12,9 @@ lab.experiment('hapi-auto-handler', () => {
     server = new Hapi.Server({
       debug: {
         log: ['warning']
+      },
+      app: {
+        key: 'value'
       }
     });
     server.connection({ port: 3000 });
@@ -126,6 +129,33 @@ lab.experiment('hapi-auto-handler', () => {
           code.expect(response.result.first.host).to.equal(server.info.host);
           code.expect(typeof response.result.second).to.equal('object');
           code.expect(response.result.second.host).to.equal(server.info.host);
+          allDone();
+        });
+      });
+    });
+  });
+  lab.test(' makes the "setting" object available within the auto methods ', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          auto: {
+            // make a dependency on 'server' to make results.server available within your method:
+            reply: ['settings', (results, done) => {
+              done(null, results.settings);
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (response) => {
+          code.expect(response.statusCode).to.equal(200);
+          code.expect(typeof response.result).to.equal('object');
+          code.expect(response.result.key).to.equal('value');
           allDone();
         });
       });
