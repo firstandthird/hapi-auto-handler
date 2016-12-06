@@ -185,4 +185,36 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+  lab.test(' handles the "autoInject" parameter', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            first: (done) => {
+              done(null, 1);
+            },
+            third: (first, done) => {
+              code.expect(first).to.equal(1);
+              done(null, 2);
+            },
+            reply: (first, third, done) => {
+              code.expect(first+third).to.equal(3);
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', () => {
+          allDone();
+        });
+      });
+    });
+  });
+
 });

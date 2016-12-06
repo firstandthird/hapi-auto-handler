@@ -7,9 +7,8 @@ const defaults = {};
 
 exports.register = (server, options, next) => {
   options = defaultMethod(options, defaults);
-  // define an 'auto' handler that routes can use:
-  server.handler('auto', (route, autoOptions) => {
-    return (request, reply) => {
+  const getReplyHandler = (autoMethod, autoOptions) =>
+    (request, reply) => {
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
         done(null, server);
@@ -18,13 +17,12 @@ exports.register = (server, options, next) => {
       autoOptions.request = (done) => {
         done(null, request);
       };
-      // run the async.auto expression:
-      async.auto(autoOptions, (err, results) => {
+      // run the async.auto or autoInject expression:
+      autoMethod(autoOptions, (err, results) => {
         if (err) {
           if (err.isBoom) {
             return reply(err);
           }
-
           return reply(Boom.wrap(err));
         }
         if (autoOptions.reply) {
@@ -36,7 +34,11 @@ exports.register = (server, options, next) => {
         reply(results);
       });
     };
-  });
+
+  // define an 'auto' handler that routes can use:
+  server.handler('auto', (route, autoOptions) => getReplyHandler(async.auto, autoOptions));
+  // define an 'autoInject' handler that routes can use:
+  server.handler('autoInject', (route, autoOptions) => getReplyHandler(async.autoInject, autoOptions));
   next();
 };
 
