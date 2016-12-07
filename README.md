@@ -3,7 +3,7 @@
 ## Hapi plugin that makes it easy to write route handlers that perform complex asynchronous processing flows.
 
 ## Background
-The __[async](http://caolan.github.io/async/index.html)__ library is a popular module for working with asynchronous JavaScript. One of the most powerful methods it provides is __[async.auto](http://caolan.github.io/async/docs.html#auto)__, which lets you describe and execute complex parallel dependency graphs with one easy-to-read JavaScript object. This plugin makes it simple to incorporate __async.auto__ into your hapi route handlers and return the results to the caller.
+The __[async](http://caolan.github.io/async/index.html)__ library is a popular module for working with asynchronous JavaScript. One of the most powerful methods it provides is __[async.auto](http://caolan.github.io/async/docs.html#auto)__, which lets you describe and execute complex parallel dependency graphs with one easy-to-read JavaScript object. This plugin makes it simple to incorporate __async.auto__ (and its cousin __async.autoInject__) into your hapi route handlers and return the results to the caller.
 
 
 ## Install
@@ -12,7 +12,7 @@ The __[async](http://caolan.github.io/async/index.html)__ library is a popular m
 npm install hapi-auto-handler
 ```
 
-## Use
+## Use (auto mode)
 
 
 ```js
@@ -55,9 +55,61 @@ server.register({
   });
 });
 ```
+## Use (autoInject mode)
+
+
+```js
+const Hapi = require('hapi');
+const server = new Hapi.Server({});
+
+server.register({
+  register: require('hapi-auto-handler'),
+  options: {}
+}, () => {
+  server.route({
+    path: '/example/{theInput}',
+    method: 'GET',
+    handler: {
+      // hapi-auto-handler recognizes the 'autoInject' keyname and will generate the route handler for you:
+      autoInject: {
+        first: (done) => {
+          done(null, 'first');
+        },
+        second: (done) => {
+          done(null, 'second');
+        },
+        // third only runs after first and second are done:
+        third: (first, second, done) => {
+          done(null, first + second);
+        },
+        // make your method depend on 'request' to access the request object:
+        fourth: (third, request, done) => {
+          // request is now the request object:
+          done(null, third + request.params.theInput)
+        },
+        // name a method 'reply' to send its output to the handler's 'reply' method:
+        reply: (fourth, done) => {
+          const replyString = 'Result was: ' + fourth;
+          // send the results back to the caller, same as calling 'reply(replyString)':
+          done(null, replyString);
+        }]
+      }
+    }
+  });
+});
+```
 ## Features:
 
 ### Special Dependencies
+- ***settings***: can be specified in the dependency list for a method to make the hapi __server.settings.app__ object available inside the method:
+```js
+  server.settings.app.value1 = 'hey'
+  ...
+  getSettingsStuff: ['settings', (results, done) => {
+    const settings = results.settings.app.value1;
+  }]
+  ...
+```
 - ***request***: can be specified in the dependency list for a method to make the hapi __[request](http://hapijs.com/api#requests)__ object available inside the method:
 ```js
 ...
