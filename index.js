@@ -29,7 +29,16 @@ exports.register = (server, options, next) => {
           return reply(Boom.wrap(err));
         }
         if (autoOptions.reply) {
-          return reply(results.reply);
+          const replyObj = reply(results.reply);
+          if (results.redirect) {
+            replyObj.redirect(results.redirect );
+          }
+
+          if (results.setState) {
+            replyObj.state(results.setState);
+          }
+
+          return replyObj;
         }
         // must unset these before hapi can return the results object:
         unset(results, 'server');
