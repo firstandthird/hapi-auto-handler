@@ -96,6 +96,90 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+  lab.test(' will return a redirect if redirect is defined', (allDone) => {
+    const calledStatements = [];
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/redir-example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              calledStatements.push('first');
+              done();
+            },
+            second: (done) => {
+              calledStatements.push('second');
+              done();
+            },
+            third: ['first', 'second', (results, done) => {
+              calledStatements.push('third');
+              done(null, 'the_third_result');
+            }],
+            redirect: ['third', (results, done) => {
+              done(null, '/go-to-here');
+            }],
+            reply: ['third', (results, done) => {
+              done(null, results.third);
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/redir-example', (response) => {
+          code.expect(response.statusCode).to.equal(302);
+          code.expect(response.headers.location).to.equal('/go-to-here');
+          allDone();
+        });
+      });
+    });
+
+  });
+  lab.test(' will set a state if setState is defined', (allDone) => {
+    const calledStatements = [];
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/redir-example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              calledStatements.push('first');
+              done();
+            },
+            second: (done) => {
+              calledStatements.push('second');
+              done();
+            },
+            third: ['first', 'second', (results, done) => {
+              calledStatements.push('third');
+              done(null, 'the_third_result');
+            }],
+            setState: ['third', (results, done) => {
+              done(null, '890jdksfgu893rgjhksdfkjhdsfgdsf');
+            }],
+            reply: ['third', (results, done) => {
+              done(null, results.third);
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/redir-example', (response) => {
+          code.expect(response.headers['set-cookie'][0]).to.startWith('890jdksfgu893rgjhksdfkjhdsfgdsf');
+          code.expect(response.statusCode).to.equal(200);
+          allDone();
+        });
+      });
+    });
+
+  });
   lab.test(' makes the "server" and "request" objects available within the auto methods ', (allDone) => {
     server.register({
       register: autoPlugin,
