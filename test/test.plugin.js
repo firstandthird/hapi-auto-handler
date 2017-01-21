@@ -162,7 +162,7 @@ lab.experiment('hapi-auto-handler', () => {
               done(null, 'the_third_result');
             }],
             setState: ['third', (results, done) => {
-              done(null, '890jdksfgu893rgjhksdfkjhdsfgdsf');
+              done(null, {name: 'newstate', data: '890jdksfgu893rgjhksdfkjhdsfgdsf'});
             }],
             reply: ['third', (results, done) => {
               done(null, results.third);
@@ -172,7 +172,7 @@ lab.experiment('hapi-auto-handler', () => {
       });
       server.start(() => {
         server.inject('/redir-example', (response) => {
-          code.expect(response.headers['set-cookie'][0]).to.startWith('890jdksfgu893rgjhksdfkjhdsfgdsf');
+          code.expect(response.headers['set-cookie'][0]).to.startWith('newstate=890jdksfgu893rgjhksdfkjhdsfgdsf');
           code.expect(response.statusCode).to.equal(200);
           allDone();
         });

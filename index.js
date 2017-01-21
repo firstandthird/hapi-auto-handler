@@ -35,7 +35,9 @@ exports.register = (server, options, next) => {
           }
 
           if (results.setState) {
-            replyObj.state(results.setState);
+            const name = results.setState.name;
+            const data = results.setState.data;
+            replyObj.state(name, data);
           }
 
           return replyObj;
