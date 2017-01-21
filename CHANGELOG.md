@@ -1,4 +1,9 @@
 
+1.1. / 2017-01-21
+==================
+
+  * Fixing set state bug where state was only half the data required
+
 1.1.1 / 2017-01-20
 ==================
 
