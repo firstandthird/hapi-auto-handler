@@ -299,6 +299,60 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+  lab.test(' returns string errors as Boom', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              done('you have made a grave mistake');
+            },
+            second: ['first', (results, done) => {
+              done(null, 'fail');
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (response) => {
+          code.expect(response.statusCode).to.equal(500);
+          allDone();
+        });
+      });
+    });
+  });
+  lab.test(' returns values of other type ', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          auto: {
+            first: (done) => {
+              done('you have made a grave mistake');
+            },
+            second: ['first', (results, done) => {
+              done(null, 'fail');
+            }]
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (response) => {
+          code.expect(response.statusCode).to.equal(500);
+          allDone();
+        });
+      });
+    });
+  });
   lab.test(' handles the "autoInject" parameter', (allDone) => {
     server.register({
       register: autoPlugin,
