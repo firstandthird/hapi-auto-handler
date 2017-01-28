@@ -26,12 +26,18 @@ exports.register = (server, options, next) => {
           if (err.isBoom) {
             return reply(err);
           }
-          return reply(Boom.wrap(err));
+          if (typeof err === 'string') {
+            err = new Error(err);
+          }
+          if (err instanceof Error) {
+            return reply(Boom.wrap(err));
+          }
+          return reply(err).code(500);
         }
         if (autoOptions.reply) {
           const replyObj = reply(results.reply);
           if (results.redirect) {
-            replyObj.redirect(results.redirect );
+            replyObj.redirect(results.redirect);
           }
 
           if (results.setState) {
