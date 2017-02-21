@@ -11,7 +11,7 @@ exports.register = (server, options, next) => {
     (request, reply) => {
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
-        done(null, server);
+        done(null, server.root);
       };
       // a copy of the request is avilabable within the auto methods as results.request:
       autoOptions.request = (done) => {

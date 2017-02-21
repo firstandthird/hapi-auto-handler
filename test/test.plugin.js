@@ -385,4 +385,34 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+
+  lab.test('uses root server if things are defined after plugin', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            first(server, done) { // eslint-disable-line no-shadow
+              done(null, server.test());
+            },
+            reply(first, done) {
+              code.expect(first).to.equal(true);
+              done(null, 'ok');
+            }
+          }
+        }
+      });
+      server.decorate('server', 'test', () => true);
+      server.start(() => {
+        server.inject('/example', (res) => {
+          code.expect(res.statusCode).to.equal(200);
+          allDone();
+        });
+      });
+    });
+  });
 });
