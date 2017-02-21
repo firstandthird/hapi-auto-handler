@@ -378,7 +378,8 @@ lab.experiment('hapi-auto-handler', () => {
         }
       });
       server.start(() => {
-        server.inject('/example', () => {
+        server.inject('/example', (res) => {
+          code.expect(res.statusCode).to.equal(200);
           allDone();
         });
       });
