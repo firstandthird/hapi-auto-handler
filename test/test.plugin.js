@@ -136,8 +136,8 @@ lab.experiment('hapi-auto-handler', () => {
         });
       });
     });
-
   });
+
   lab.test(' will set a state if setState is defined', (allDone) => {
     const calledStatements = [];
     server.register({
@@ -162,7 +162,7 @@ lab.experiment('hapi-auto-handler', () => {
               done(null, 'the_third_result');
             }],
             setState: ['third', (results, done) => {
-              done(null, {name: 'newstate', data: '890jdksfgu893rgjhksdfkjhdsfgdsf'});
+              done(null, { name: 'newstate', data: '890jdksfgu893rgjhksdfkjhdsfgdsf' });
             }],
             reply: ['third', (results, done) => {
               done(null, results.third);
@@ -178,8 +178,8 @@ lab.experiment('hapi-auto-handler', () => {
         });
       });
     });
-
   });
+
   lab.test(' makes the "server" and "request" objects available within the auto methods ', (allDone) => {
     server.register({
       register: autoPlugin,
@@ -371,7 +371,7 @@ lab.experiment('hapi-auto-handler', () => {
               done(null, 2);
             },
             reply: (first, third, done) => {
-              code.expect(first+third).to.equal(3);
+              code.expect(first + third).to.equal(3);
               done();
             }
           }
