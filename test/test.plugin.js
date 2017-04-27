@@ -20,6 +20,7 @@ lab.experiment('hapi-auto-handler', () => {
     server.connection({ port: 3000 });
     done();
   });
+
   lab.test(' allows a basic auto handler', (allDone) => {
     const calledStatements = [];
     server.register({
@@ -409,6 +410,41 @@ lab.experiment('hapi-auto-handler', () => {
       server.decorate('server', 'test', () => true);
       server.start(() => {
         server.inject('/example', (res) => {
+          code.expect(res.statusCode).to.equal(200);
+          allDone();
+        });
+      });
+    });
+  });
+
+  lab.test(' handles the "headers" parameter', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/example',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            first: (done) => {
+              done(null, 1);
+            },
+            third: (first, done) => {
+              code.expect(first).to.equal(1);
+              done(null, 2);
+            },
+            $headers: (first, done) => done(null, { 'content-type': 'application/mp3' }),
+            reply: (first, third, $headers, done) => {
+              code.expect(first + third).to.equal(3);
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/example', (res) => {
+          code.expect(res.headers['content-type'], 'application/mp3');
           code.expect(res.statusCode).to.equal(200);
           allDone();
         });
