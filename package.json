@@ -1,6 +1,6 @@
 {
   "name": "hapi-auto-handler",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Hapi plugin, provides syntactic sugar to make it easy to define async.auto workflows in your handlers",
   "main": "index.js",
   "scripts": {
