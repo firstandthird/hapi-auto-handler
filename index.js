@@ -13,9 +13,6 @@ exports.register = (server, options, next) => {
       autoOptions.server = (done) => {
         done(null, server.root);
       };
-      autoOptions.headers = (done) => {
-        done(null, request.headers);
-      }
       // a copy of the request is avilabable within the auto methods as results.request:
       autoOptions.request = (done) => {
         done(null, request);
@@ -42,11 +39,13 @@ exports.register = (server, options, next) => {
           if (results.redirect) {
             replyObj.redirect(results.redirect);
           }
+
           if (results.setState) {
             const name = results.setState.name;
             const data = results.setState.data;
             replyObj.state(name, data);
           }
+
           return replyObj;
         }
         // must unset these before hapi can return the results object:
