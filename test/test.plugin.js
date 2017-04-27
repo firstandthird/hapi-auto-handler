@@ -415,4 +415,37 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+
+  lab.test('makes the headers available if specified', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/headers',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            first(server, done) { // eslint-disable-line no-shadow
+              done(null, server.test());
+            },
+            reply(first, headers, done) {
+              code.expect(typeof headers, 'object');
+              headers['content-type'] = 'application/mp3';
+              code.expect(first).to.equal(true);
+              done(null, 'ok');
+            }
+          }
+        }
+      });
+      server.decorate('server', 'test', () => true);
+      server.start(() => {
+        server.inject('/headers', (res) => {
+          code.expect(res.statusCode).to.equal(200);
+          code.expect(res.headers['content-type'], 'application/mp3');
+          allDone();
+        });
+      });
+    });
+  });
 });
