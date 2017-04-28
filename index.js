@@ -45,7 +45,7 @@ exports.register = (server, options, next) => {
             replyObj.state(name, data);
           }
           if (results.setHeaders) {
-            Object.keys(results.setHeaders, (key) => {
+            Object.keys(results.setHeaders).forEach((key) => {
               replyObj.header(key, results.setHeaders[key]);
             });
           }
