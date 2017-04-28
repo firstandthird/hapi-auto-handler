@@ -434,8 +434,8 @@ lab.experiment('hapi-auto-handler', () => {
               code.expect(first).to.equal(1);
               done(null, 2);
             },
-            $headers: (first, done) => done(null, { 'content-type': 'application/mp3' }),
-            reply: (first, third, $headers, done) => {
+            setHeaders: (first, done) => done(null, { 'content-type': 'application/mp3' }),
+            reply: (first, third, setHeaders, done) => {
               code.expect(first + third).to.equal(3);
               done();
             }

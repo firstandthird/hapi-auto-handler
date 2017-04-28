@@ -44,9 +44,9 @@ exports.register = (server, options, next) => {
             const data = results.setState.data;
             replyObj.state(name, data);
           }
-          if (results.$headers) {
-            Object.keys(results.$headers, (key) => {
-              replyObj.header(key, results.$headers[key]);
+          if (results.setHeaders) {
+            Object.keys(results.setHeaders, (key) => {
+              replyObj.header(key, results.setHeaders[key]);
             });
           }
           return replyObj;
