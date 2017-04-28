@@ -39,13 +39,16 @@ exports.register = (server, options, next) => {
           if (results.redirect) {
             replyObj.redirect(results.redirect);
           }
-
           if (results.setState) {
             const name = results.setState.name;
             const data = results.setState.data;
             replyObj.state(name, data);
           }
-
+          if (results.setHeaders) {
+            Object.keys(results.setHeaders, (key) => {
+              replyObj.header(key, results.setHeaders[key]);
+            });
+          }
           return replyObj;
         }
         // must unset these before hapi can return the results object:
