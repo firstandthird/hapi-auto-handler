@@ -9,6 +9,7 @@ exports.register = (server, options, next) => {
   options = defaultMethod(options, defaults);
   const getReplyHandler = (autoMethod, autoOptions) =>
     (request, reply) => {
+      let legacy = true;
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
         done(null, server.root);
@@ -20,9 +21,12 @@ exports.register = (server, options, next) => {
       autoOptions.settings = (done) => {
         done(null, request.server.settings.app);
       };
-      autoOptions.reply = (done) => {
-        done(null, reply);
-      };
+      if (!autoOptions.reply) {
+        legacy = false;
+        autoOptions.reply = (done) => {
+          done(null, reply);
+        };
+      }
       // run the async.auto or autoInject expression:
       autoMethod(autoOptions, (err, results) => {
         if (err) {
@@ -37,6 +41,31 @@ exports.register = (server, options, next) => {
           }
           return reply(err).code(500);
         }
+        if (!legacy) {
+          return;
+        }
+
+        if (autoOptions.reply) {
+          const replyObj = reply(results.reply);
+          if (results.redirect) {
+            replyObj.redirect(results.redirect);
+          }
+          if (results.setState) {
+            const name = results.setState.name;
+            const data = results.setState.data;
+            replyObj.state(name, data);
+          }
+          if (results.setHeaders) {
+            Object.keys(results.setHeaders).forEach((key) => {
+              replyObj.header(key, results.setHeaders[key]);
+            });
+          }
+          return replyObj;
+        }
+        // must unset these before hapi can return the results object:
+        unset(results, 'server');
+        unset(results, 'request');
+        reply(results);
       });
     };
 

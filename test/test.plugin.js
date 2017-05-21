@@ -4,7 +4,7 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const Hapi = require('hapi');
 const autoPlugin = require('../');
-//const Boom = require('boom');
+const Boom = require('boom');
 
 lab.experiment('hapi-auto-handler', () => {
   let server;
@@ -47,7 +47,6 @@ lab.experiment('hapi-auto-handler', () => {
     });
   });
 
-/*
   lab.test(' allows a basic auto handler', (allDone) => {
     const calledStatements = [];
     server.register({
@@ -70,6 +69,9 @@ lab.experiment('hapi-auto-handler', () => {
             third: ['first', 'second', (results, done) => {
               calledStatements.push('third');
               done(null, 'the_third_result');
+            }],
+            reply: ['first', 'second', 'third', (results, done) => {
+              done(null, results);
             }]
           }
         }
@@ -230,6 +232,9 @@ lab.experiment('hapi-auto-handler', () => {
             }],
             third: ['first', 'second', (results, done) => {
               done(null, 'the_third_result');
+            }],
+            reply: ['first', 'second', 'third', (results, done) => {
+              done(null, results);
             }]
           }
         }
@@ -478,5 +483,4 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
-  */
 });
