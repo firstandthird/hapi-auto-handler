@@ -485,4 +485,38 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+
+  lab.test('multiple requests to same - make sure not caching reply object', (allDone) => {
+    let count = 0;
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            run(reply, done) {
+              const res = reply('ok');
+              res.header('x-test', count);
+              count++;
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/', (response) => {
+          code.expect(response.statusCode).to.equal(200);
+          code.expect(response.headers['x-test']).to.equal(0);
+          server.inject('/', (res2) => {
+            code.expect(res2.statusCode).to.equal(200);
+            code.expect(res2.headers['x-test']).to.equal(1);
+          });
+          allDone();
+        });
+      });
+    });
+  });
 });
