@@ -40,15 +40,10 @@ server.register({
           done(null, results.first + results.second);
         }],
         // make your method depend on 'request' to access the request object:
-        fourth: ['third', 'request', (results, done) => {
+        fourth: ['third', 'request', 'reply', (results, done) => {
           // results.request is now the request object:
-          done(null, results.third + results.request.params.theInput)
-        }]
-        // name a method 'reply' to send its output to the handler's 'reply' method:
-        reply: ['fourth', (results, done) => {
-          const replyString = 'Result was: ' + results.fourth;
-          // send the results back to the caller, same as calling 'reply(replyString)':
-          done(null, replyString);
+          reply(null, results.third + results.request.params.theInput)
+          done();
         }]
       }
     }
@@ -72,27 +67,22 @@ server.register({
     handler: {
       // hapi-auto-handler recognizes the 'autoInject' keyname and will generate the route handler for you:
       autoInject: {
-        first: (done) => {
+        first(done) {
           done(null, 'first');
         },
-        second: (done) => {
+        second(done) {
           done(null, 'second');
         },
         // third only runs after first and second are done:
-        third: (first, second, done) => {
+        third(first, second, done) {
           done(null, first + second);
         },
         // make your method depend on 'request' to access the request object:
-        fourth: (third, request, done) => {
+        final(third, request, reply, done) {
           // request is now the request object:
-          done(null, third + request.params.theInput)
-        },
-        // name a method 'reply' to send its output to the handler's 'reply' method:
-        reply: (fourth, done) => {
-          const replyString = 'Result was: ' + fourth;
-          // send the results back to the caller, same as calling 'reply(replyString)':
-          done(null, replyString);
-        }]
+          reply(null, third + request.params.theInput);
+          done();
+        }
       }
     }
   });
@@ -131,13 +121,13 @@ server.register({
   ...
 ```
 
-### Special Methods
-- ***reply***: if a method in the auto map is given the keyname 'reply', then the result will be forwarded to the route handler's __[reply](http://hapijs.com/api#replyerr-result)__ method.
+- ***reply***: can be specified in the dependency list for a method. Anything passed to that gets send back to the client.
 ```js
 ...
-  reply: (done) => {
+  finished(reply, done) => {
     // this route will always respond with "Hello World!"
-    done(null, "Hello World!");
+    reply(null, "Hello World!");
+    done();
   }
   ...
 ```
