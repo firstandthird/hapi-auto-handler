@@ -4,7 +4,7 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const Hapi = require('hapi');
 const autoPlugin = require('../');
-const Boom = require('boom');
+//const Boom = require('boom');
 
 lab.experiment('hapi-auto-handler', () => {
   let server;
@@ -21,6 +21,33 @@ lab.experiment('hapi-auto-handler', () => {
     done();
   });
 
+  lab.test('pass in reply obj', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            run(reply, done) {
+              reply.redirect('/redirect');
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/', (response) => {
+          code.expect(response.statusCode).to.equal(302);
+          allDone();
+        });
+      });
+    });
+  });
+
+/*
   lab.test(' allows a basic auto handler', (allDone) => {
     const calledStatements = [];
     server.register({
@@ -451,4 +478,5 @@ lab.experiment('hapi-auto-handler', () => {
       });
     });
   });
+  */
 });
