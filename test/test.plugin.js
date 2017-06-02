@@ -11,7 +11,8 @@ lab.experiment('hapi-auto-handler', () => {
   lab.beforeEach((done) => {
     server = new Hapi.Server({
       debug: {
-        log: ['warning']
+        log: ['warning'],
+        //request: ['error']
       },
       app: {
         key: 'value'
@@ -20,6 +21,7 @@ lab.experiment('hapi-auto-handler', () => {
     server.connection({ port: 3000 });
     done();
   });
+
 
   lab.test(' allows a basic auto handler', (allDone) => {
     const calledStatements = [];
@@ -43,6 +45,9 @@ lab.experiment('hapi-auto-handler', () => {
             third: ['first', 'second', (results, done) => {
               calledStatements.push('third');
               done(null, 'the_third_result');
+            }],
+            reply: ['first', 'second', 'third', (results, done) => {
+              done(null, { third: results.third });
             }]
           }
         }
@@ -203,6 +208,9 @@ lab.experiment('hapi-auto-handler', () => {
             }],
             third: ['first', 'second', (results, done) => {
               done(null, 'the_third_result');
+            }],
+            reply: ['first', 'second', 'third', (results, done) => {
+              done(null, { first: results.first, second: results.second, third: results.third });
             }]
           }
         }
@@ -446,6 +454,66 @@ lab.experiment('hapi-auto-handler', () => {
         server.inject('/example', (res) => {
           code.expect(res.headers['content-type'], 'application/mp3');
           code.expect(res.statusCode).to.equal(200);
+          allDone();
+        });
+      });
+    });
+  });
+
+  lab.test('pass in reply obj', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            run(reply, done) {
+              reply.redirect('/redirect');
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/', (response) => {
+          code.expect(response.statusCode).to.equal(302);
+          allDone();
+        });
+      });
+    });
+  });
+
+  lab.test('multiple requests to same - make sure not caching reply object', (allDone) => {
+    let count = 0;
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            run(reply, done) {
+              const res = reply('ok');
+              res.header('x-test', count);
+              count++;
+              done();
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/', (response) => {
+          code.expect(response.statusCode).to.equal(200);
+          code.expect(response.headers['x-test']).to.equal(0);
+          server.inject('/', (res2) => {
+            code.expect(res2.statusCode).to.equal(200);
+            code.expect(res2.headers['x-test']).to.equal(1);
+          });
           allDone();
         });
       });
