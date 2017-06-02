@@ -22,7 +22,6 @@ lab.experiment('hapi-auto-handler', () => {
     done();
   });
 
-
   lab.test(' allows a basic auto handler', (allDone) => {
     const calledStatements = [];
     server.register({
@@ -514,6 +513,35 @@ lab.experiment('hapi-auto-handler', () => {
             code.expect(res2.statusCode).to.equal(200);
             code.expect(res2.headers['x-test']).to.equal(1);
           });
+          allDone();
+        });
+      });
+    });
+  });
+
+  lab.test('only reply once even if error occurs after reply ', (allDone) => {
+    server.register({
+      register: autoPlugin,
+      options: {}
+    }, () => {
+      server.route({
+        path: '/',
+        method: 'GET',
+        handler: {
+          autoInject: {
+            run(reply, done) {
+              reply(null, 'one');
+              done();
+            },
+            two(run, done) {
+              done(new Error('err'));
+            }
+          }
+        }
+      });
+      server.start(() => {
+        server.inject('/', (response) => {
+          code.expect(response.statusCode).to.equal(200);
           allDone();
         });
       });
