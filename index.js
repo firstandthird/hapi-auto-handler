@@ -9,6 +9,7 @@ exports.register = (server, options, next) => {
   options = defaultMethod(options, defaults);
   const getReplyHandler = (autoMethod, autoOptions) => {
     const legacy = (autoOptions.reply);
+    let replyCalled = false;
     return (request, reply) => {
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
@@ -23,12 +24,13 @@ exports.register = (server, options, next) => {
       };
       if (!legacy) {
         autoOptions.reply = (done) => {
+          replyCalled = true;
           done(null, reply);
         };
       }
       // run the async.auto or autoInject expression:
       autoMethod(autoOptions, (err, results) => {
-        if (err) {
+        if (err && !replyCalled) {
           if (err.isBoom) {
             return reply(err);
           }
@@ -61,7 +63,7 @@ exports.register = (server, options, next) => {
           }
           return replyObj;
         }
-        // must unset these before hapi can return the results object:
+        // must unset these before hapi can return the r esults object:
         unset(results, 'server');
         unset(results, 'request');
         reply(results);
