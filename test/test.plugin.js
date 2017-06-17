@@ -534,7 +534,7 @@ lab.experiment('hapi-auto-handler', () => {
               done();
             },
             two(run, done) {
-              done(new Error('err'));
+              done(new Error('reply was called twice'));
             }
           }
         }

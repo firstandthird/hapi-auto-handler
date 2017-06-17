@@ -42,6 +42,9 @@ exports.register = (server, options, next) => {
           }
           return reply(err).code(500);
         }
+        if (err) {
+          server.log(['warning'], err);
+        }
         if (!legacy) {
           return;
         }
