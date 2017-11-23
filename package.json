@@ -21,11 +21,11 @@
     "lodash.unset": "^4.5.2"
   },
   "devDependencies": {
-    "code": "^4.0.0",
+    "code": "^5.1.2",
     "eslint": "^3.9.1",
     "eslint-config-firstandthird": "^3.1.0",
     "eslint-plugin-import": "^2.1.0",
-    "hapi": "^16.0.2",
-    "lab": "13.1.0"
+    "hapi": "^17.0.1",
+    "lab": "^15.1.2"
   }
 }

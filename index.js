@@ -5,17 +5,17 @@ const unset = require('lodash.unset');
 const Boom = require('boom');
 const defaults = {};
 
-exports.register = (server, options, next) => {
+const register = async(server, options) => {
   options = defaultMethod(options, defaults);
   const getReplyHandler = (autoMethod, autoOptions) => {
     const legacy = (autoOptions.reply);
     let replyCalled = false;
-    return (request, reply) => {
+    return async (request, h) => {
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
-        done(null, server.root);
+        done(null, server);
       };
-      // a copy of the request is avilabable within the auto methods as results.request:
+      // a copy of the request is avilable within the auto methods as results.request:
       autoOptions.request = (done) => {
         done(null, request);
       };
@@ -25,62 +25,65 @@ exports.register = (server, options, next) => {
       if (!legacy) {
         autoOptions.reply = (done) => {
           replyCalled = true;
-          done(null, reply);
+          done(null, h);
         };
       }
       // run the async.auto or autoInject expression:
-      autoMethod(autoOptions, (err, results) => {
-        if (err && !replyCalled) {
-          if (err.isBoom) {
-            return reply(err);
+      const response = await new Promise((resolve, reject) => {
+        autoMethod(autoOptions, (err, results) => {
+          if (err && !replyCalled) {
+            if (err.isBoom) {
+              return reject(err);
+            }
+            if (typeof err === 'string') {
+              err = new Error(err);
+            }
+            if (err instanceof Error) {
+              return reject(Boom.wrap(err));
+            }
+            return reject(err);
           }
-          if (typeof err === 'string') {
-            err = new Error(err);
+          if (err) {
+            server.log(['warning'], err);
           }
-          if (err instanceof Error) {
-            return reply(Boom.wrap(err));
+          if (!legacy) {
+            return resolve();
           }
-          return reply(err).code(500);
-        }
-        if (err) {
-          server.log(['warning'], err);
-        }
-        if (!legacy) {
-          return;
-        }
-
-        if (autoOptions.reply) {
-          const replyObj = reply(results.reply);
-          if (results.redirect) {
-            replyObj.redirect(results.redirect);
+          if (autoOptions.reply) {
+            const replyObj = h.response(results.reply);
+            if (results.redirect) {
+              replyObj.redirect(results.redirect).temporary();
+            }
+            if (results.setState) {
+              const name = results.setState.name;
+              const data = results.setState.data;
+              replyObj.state(name, data);
+            }
+            if (results.setHeaders) {
+              Object.keys(results.setHeaders).forEach((key) => {
+                replyObj.header(key, results.setHeaders[key]);
+              });
+            }
+            return resolve(replyObj);
           }
-          if (results.setState) {
-            const name = results.setState.name;
-            const data = results.setState.data;
-            replyObj.state(name, data);
-          }
-          if (results.setHeaders) {
-            Object.keys(results.setHeaders).forEach((key) => {
-              replyObj.header(key, results.setHeaders[key]);
-            });
-          }
-          return replyObj;
-        }
-        // must unset these before hapi can return the r esults object:
-        unset(results, 'server');
-        unset(results, 'request');
-        reply(results);
+          // must unset these before hapi can return the results object:
+          unset(results, 'server');
+          unset(results, 'request');
+          return resolve(h.response(results));
+        });
       });
+      return response;
     };
   };
 
   // define an 'auto' handler that routes can use:
-  server.handler('auto', (route, autoOptions) => getReplyHandler(async.auto, autoOptions));
+  server.decorate('handler', 'auto', (route, autoOptions) => getReplyHandler(async.auto, autoOptions));
   // define an 'autoInject' handler that routes can use:
-  server.handler('autoInject', (route, autoOptions) => getReplyHandler(async.autoInject, autoOptions));
-  next();
+  server.decorate('handler', 'autoInject', (route, autoOptions) => getReplyHandler(async.autoInject, autoOptions));
 };
 
-exports.register.attributes = {
+exports.plugin = {
+  register,
+  once: true,
   pkg: require('./package.json')
 };
