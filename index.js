@@ -19,11 +19,12 @@ const register = async(server, options) => {
       autoOptions.request = (done) => {
         done(null, request);
       };
+      // a copy of the settings is avilable within the auto methods as results.settings:
       autoOptions.settings = (done) => {
         done(null, request.server.settings.app);
       };
       if (!legacy) {
-        autoOptions.reply = (done) => {
+        autoOptions.h = (done) => {
           replyCalled = true;
           done(null, h);
         };
@@ -45,9 +46,6 @@ const register = async(server, options) => {
           }
           if (err) {
             server.log(['warning'], err);
-          }
-          if (!legacy) {
-            return resolve();
           }
           if (autoOptions.reply) {
             const replyObj = h.response(results.reply);
