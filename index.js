@@ -23,8 +23,13 @@ const register = async(server, options) => {
       autoOptions.settings = (done) => {
         done(null, request.server.settings.app);
       };
+      // a copy of the h reply object is available within the auto methods as results.h:
+      autoOptions.h = (done) => {
+        return done(null, h);
+      }
+
       if (!legacy) {
-        autoOptions.h = (done) => {
+        autoOptions.reply = (done) => {
           replyCalled = true;
           done(null, h);
         };
@@ -67,6 +72,7 @@ const register = async(server, options) => {
           // must unset these before hapi can return the results object:
           unset(results, 'server');
           unset(results, 'request');
+          unset(results, 'h');
           return resolve(h.response(results));
         });
       });

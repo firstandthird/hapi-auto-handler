@@ -22,6 +22,10 @@ lab.experiment('hapi-auto-handler', () => {
     });
   });
 
+  lab.afterEach(async () => {
+    await server.stop();
+  });
+
   lab.test('allows a basic auto handler', async () => {
     const calledStatements = [];
     await server.register({
@@ -413,4 +417,52 @@ lab.experiment('hapi-auto-handler', () => {
     code.expect(res.statusCode).to.equal(200);
   });
 
+  lab.test('pass in h and return reply function', async () => {
+    await server.register({ plugin: autoPlugin, options: {} });
+    server.route({
+      path: '/',
+      method: 'GET',
+      handler: {
+        autoInject: {
+          reply(h, done) {
+            done(null, h.redirect('/redirect'));
+          }
+        }
+      }
+    });
+    await server.start();
+    const response = await server.inject('/');
+    code.expect(response.statusCode).to.equal(302);
+    await server.stop();
+  });
+
+  lab.test('multiple requests to same - make sure not caching reply object', async() => {
+    let count = 0;
+    await server.register({
+      plugin: autoPlugin,
+      options: {}
+    });
+    server.route({
+      path: '/',
+      method: 'GET',
+      handler: {
+        autoInject: {
+          reply(h, done) {
+            const res = h.response('ok');
+            res.header('x-test', count);
+            count++;
+            done(null, res);
+          }
+        }
+      }
+    });
+    await server.start();
+    const response = await server.inject('/');
+    code.expect(response.statusCode).to.equal(200);
+    code.expect(response.headers['x-test']).to.equal(0);
+    const res2 = await server.inject('/');
+    code.expect(res2.statusCode).to.equal(200);
+    code.expect(res2.headers['x-test']).to.equal(1);
+    await server.stop();
+  });
 });
