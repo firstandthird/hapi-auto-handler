@@ -1,4 +1,3 @@
-'use strict';
 const async = require('async');
 const defaultMethod = require('lodash.defaults');
 const unset = require('lodash.unset');
@@ -11,31 +10,31 @@ const register = async(server, options) => {
     const legacy = (autoOptions.reply);
     let replyCalled = false;
     return async (request, h) => {
-      // a copy of the server is available within the auto methods as results.server:
-      autoOptions.server = (done) => {
-        done(null, server);
-      };
-      // a copy of the request is avilable within the auto methods as results.request:
-      autoOptions.request = (done) => {
-        done(null, request);
-      };
-      // a copy of the settings is avilable within the auto methods as results.settings:
-      autoOptions.settings = (done) => {
-        done(null, request.server.settings.app);
-      };
-      // a copy of the h reply object is available within the auto methods as results.h:
-      autoOptions.h = (done) => {
-        return done(null, h);
-      }
-
-      if (!legacy) {
-        autoOptions.reply = (done) => {
-          replyCalled = true;
-          done(null, h);
+      return new Promise(async(resolve, reject) => {
+        // a copy of the server is available within the auto methods as results.server:
+        autoOptions.server = (done) => {
+          done(null, server);
         };
-      }
-      // run the async.auto or autoInject expression:
-      const response = await new Promise((resolve, reject) => {
+        // a copy of the request is avilable within the auto methods as results.request:
+        autoOptions.request = (done) => {
+          done(null, request);
+        };
+        // a copy of the settings is avilable within the auto methods as results.settings:
+        autoOptions.settings = (done) => {
+          done(null, request.server.settings.app);
+        };
+        // a copy of the h reply object is available within the auto methods as results.h:
+        autoOptions.h = (done) => {
+          return done(null, h);
+        }
+
+        if (!legacy) {
+          autoOptions.reply = (done) => {
+            replyCalled = true;
+            done(null, h);
+          };
+        }
+        // run the async.auto or autoInject expression:
         autoMethod(autoOptions, (err, results) => {
           if (err && !replyCalled) {
             if (err.isBoom) {
@@ -76,7 +75,6 @@ const register = async(server, options) => {
           return resolve(h.response(results));
         });
       });
-      return response;
     };
   };
 
