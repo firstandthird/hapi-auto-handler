@@ -1,5 +1,5 @@
 'use strict';
-const code = require('code');   // assertion library
+const code = require('code');
 const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const Hapi = require('hapi');

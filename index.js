@@ -9,73 +9,69 @@ const register = async(server, options) => {
   const getReplyHandler = (autoMethod, autoOptions) => {
     const legacy = (autoOptions.reply);
     let replyCalled = false;
-    return async (request, h) => {
-      return new Promise(async(resolve, reject) => {
-        // a copy of the server is available within the auto methods as results.server:
-        autoOptions.server = (done) => {
-          done(null, server);
-        };
-        // a copy of the request is avilable within the auto methods as results.request:
-        autoOptions.request = (done) => {
-          done(null, request);
-        };
-        // a copy of the settings is avilable within the auto methods as results.settings:
-        autoOptions.settings = (done) => {
-          done(null, request.server.settings.app);
-        };
-        // a copy of the h reply object is available within the auto methods as results.h:
-        autoOptions.h = (done) => {
-          return done(null, h);
-        }
+    return async (request, h) => new Promise(async(resolve, reject) => {
+      // a copy of the server is available within the auto methods as results.server:
+      autoOptions.server = (done) => {
+        done(null, server);
+      };
+      // a copy of the request is avilable within the auto methods as results.request:
+      autoOptions.request = (done) => {
+        done(null, request);
+      };
+      // a copy of the settings is avilable within the auto methods as results.settings:
+      autoOptions.settings = (done) => {
+        done(null, request.server.settings.app);
+      };
+      // a copy of the h reply object is available within the auto methods as results.h:
+      autoOptions.h = (done) => done(null, h);
 
-        if (!legacy) {
-          autoOptions.reply = (done) => {
-            replyCalled = true;
-            done(null, h);
-          };
-        }
-        // run the async.auto or autoInject expression:
-        autoMethod(autoOptions, (err, results) => {
-          if (err && !replyCalled) {
-            if (err.isBoom) {
-              return reject(err);
-            }
-            if (typeof err === 'string') {
-              err = new Error(err);
-            }
-            if (err instanceof Error) {
-              return reject(Boom.wrap(err));
-            }
+      if (!legacy) {
+        autoOptions.reply = (done) => {
+          replyCalled = true;
+          done(null, h);
+        };
+      }
+      // run the async.auto or autoInject expression:
+      autoMethod(autoOptions, (err, results) => {
+        if (err && !replyCalled) {
+          if (err.isBoom) {
             return reject(err);
           }
-          if (err) {
-            server.log(['warning'], err);
+          if (typeof err === 'string') {
+            err = new Error(err);
           }
-          if (autoOptions.reply) {
-            const replyObj = h.response(results.reply);
-            if (results.redirect) {
-              replyObj.redirect(results.redirect).temporary();
-            }
-            if (results.setState) {
-              const name = results.setState.name;
-              const data = results.setState.data;
-              replyObj.state(name, data);
-            }
-            if (results.setHeaders) {
-              Object.keys(results.setHeaders).forEach((key) => {
-                replyObj.header(key, results.setHeaders[key]);
-              });
-            }
-            return resolve(replyObj);
+          if (err instanceof Error) {
+            return reject(Boom.wrap(err));
           }
-          // must unset these before hapi can return the results object:
-          unset(results, 'server');
-          unset(results, 'request');
-          unset(results, 'h');
-          return resolve(h.response(results));
-        });
+          return reject(err);
+        }
+        if (err) {
+          server.log(['warning'], err);
+        }
+        if (autoOptions.reply) {
+          const replyObj = h.response(results.reply);
+          if (results.redirect) {
+            replyObj.redirect(results.redirect).temporary();
+          }
+          if (results.setState) {
+            const name = results.setState.name;
+            const data = results.setState.data;
+            replyObj.state(name, data);
+          }
+          if (results.setHeaders) {
+            Object.keys(results.setHeaders).forEach((key) => {
+              replyObj.header(key, results.setHeaders[key]);
+            });
+          }
+          return resolve(replyObj);
+        }
+        // must unset these before hapi can return the results object:
+        unset(results, 'server');
+        unset(results, 'request');
+        unset(results, 'h');
+        return resolve(h.response(results));
       });
-    };
+    });
   };
 
   // define an 'auto' handler that routes can use:
