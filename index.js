@@ -9,16 +9,16 @@ const register = async(server, options) => {
   const getReplyHandler = (autoMethod, autoOptions) => {
     const legacy = (autoOptions.reply);
     let replyCalled = false;
-    return async (request, h) => new Promise(async(resolve, reject) => {
+    return (request, h) => new Promise((resolve, reject) => {
       // a copy of the server is available within the auto methods as results.server:
       autoOptions.server = (done) => {
         done(null, server);
       };
-      // a copy of the request is avilable within the auto methods as results.request:
+      // a copy of the request is available within the auto methods as results.request:
       autoOptions.request = (done) => {
         done(null, request);
       };
-      // a copy of the settings is avilable within the auto methods as results.settings:
+      // a copy of the settings is available within the auto methods as results.settings:
       autoOptions.settings = (done) => {
         done(null, request.server.settings.app);
       };
