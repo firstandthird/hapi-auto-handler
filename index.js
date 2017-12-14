@@ -4,7 +4,7 @@ const unset = require('lodash.unset');
 const Boom = require('boom');
 const defaults = {};
 
-const register = async(server, options) => {
+const register = (server, options) => {
   options = defaultMethod(options, defaults);
   const getReplyHandler = (autoMethod, autoOptions) => {
     const legacy = (autoOptions.reply);

@@ -9,7 +9,7 @@ const Boom = require('boom');
 lab.experiment('hapi-auto-handler', () => {
   let server;
 
-  lab.beforeEach(async () => {
+  lab.beforeEach(() => {
     server = new Hapi.Server({
       debug: {
         log: ['warning'],
